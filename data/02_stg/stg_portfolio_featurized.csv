@@ -1,4 +1,4 @@
-offer_id,difficulty,reward,duration_days,duration_hours,email,mobile,social,web,offer_type_bogo,offer_type_discount,offer_type_informational
+offer_id,difficulty,reward,duration_days,duration_hrs,email,mobile,social,web,offer_type_bogo,offer_type_discount,offer_type_informational
 ae264e3637204a6fb9bb56bc8210ddfd,10,10,7,168,1,1,1,0,1,0,0
 4d5c57ea9a6940dd891ad53e9dbe8da0,10,10,5,120,1,1,1,1,1,0,0
 3f207df678b143eea3cee63160fa8bed,0,0,4,96,1,1,0,1,0,0,1
