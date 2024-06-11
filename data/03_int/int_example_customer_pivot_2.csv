@@ -1,7 +1,0 @@
-customer_id,offer_id,offer_type,offer_received,offer_viewed,offer_completed,time_to_completion,offer_effect,difficulty,duration_hrs,expiration,reward
-ffff82501cea40309d5fdd7edcca4a07,fafdcd668e3743c1bb461111dcafc2a4,discount,0.0,6.0,60.0,54.0,2,10,240,240.0,2.0
-ffff82501cea40309d5fdd7edcca4a07,0b1e1539f2cc45b7b9fa7c272da2e1d7,discount,168.0,174.0,198.0,24.0,2,20,240,408.0,5.0
-ffff82501cea40309d5fdd7edcca4a07,2906b810c7d4411798c6938adc9daaa5,discount,336.0,354.0,384.0,30.0,2,10,168,504.0,2.0
-ffff82501cea40309d5fdd7edcca4a07,2906b810c7d4411798c6938adc9daaa5,discount,336.0,354.0,384.0,30.0,2,10,168,504.0,2.0
-ffff82501cea40309d5fdd7edcca4a07,2906b810c7d4411798c6938adc9daaa5,discount,336.0,354.0,384.0,30.0,2,10,168,504.0,2.0
-ffff82501cea40309d5fdd7edcca4a07,9b98b8c7a33c4b65b9aebfe6a799e6d9,bogo,504.0,534.0,504.0,0.0,0,5,168,672.0,5.0
