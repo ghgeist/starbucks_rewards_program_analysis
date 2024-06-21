@@ -1,0 +1,5 @@
+gender,num_cust,percentage_cust,avg_days_as_member,avg_age,avg_income
+M,8484,49.91,530.0,52.0,61195.0
+F,6129,36.05,513.0,58.0,71306.0
+Unknown,2175,12.79,483.0,,
+O,212,1.25,487.0,54.0,63288.0

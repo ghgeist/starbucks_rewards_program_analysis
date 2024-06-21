@@ -1,4 +1,4 @@
-gender,age_group,income_group,member_since,cust_count
+gender,age_group,income_group,member_since,num_cust
 M,45-54,50K-74K,2017 Q4,128
 M,55-64,50K-74K,2017 Q3,110
 M,55-64,50K-74K,2018 Q1,98
