@@ -1,7 +1,7 @@
-,segment,is_bogo,is_discount,reward,difficulty,duration_hrs,num_customers,viewed_rate,viewed_before_completion_rate,completion_rate,offers_completed,total_transactions,median_total_transactions,total_transaction_amount,median_total_transaction_amount,score
-3,0,0,1,2,10,240,1275,97.33,75.22,86.2,1099,1189,1.0,2778563.0,21.02,4
-4,0,0,1,3,7,168,1259,96.98,70.85,83.8,1055,1124,1.0,2883622.0,20.51,4
-13,1,0,1,2,10,240,3234,96.66,63.98,72.17,2334,4579,1.0,4882342.0,13.024999999999999,5
-14,1,0,1,3,7,168,3190,96.68,62.1,70.78,2258,3824,1.0,3919319.0,9.815000000000001,5
-23,2,0,1,2,10,240,1035,97.58,70.43,78.74,815,1491,1.0,1469670.0,13.38,4
-26,2,1,0,5,5,120,1064,96.52,57.8,69.08,735,961,1.0,1247571.0,9.645,4
+,segment,is_bogo,reward,difficulty,duration_hrs,median_total_transaction_amount,overspend
+1,0,0,2,10,240,13.02,1.02
+2,0,0,3,7,168,9.81,-0.19
+9,1,0,2,10,240,13.35,1.35
+10,1,0,3,7,168,11.25,1.25
+17,2,0,2,10,240,20.99,8.99
+18,2,0,3,7,168,20.47,10.47

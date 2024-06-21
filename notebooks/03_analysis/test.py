@@ -1,117 +1,106 @@
+# Imports
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, cross_val_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import (confusion_matrix, accuracy_score, precision_score, 
+                             recall_score, f1_score, roc_auc_score, classification_report)
+import itertools
 
-# Import data
+# Import Data
 df = pd.read_pickle(r'data\04_fct\fct_demographic_offers_and_transactions.pkl')
 
-### Segment Customers ###
-# Extract demographic features for clustering
-demographic_features = df[['age', 'income', 'days_as_member', 'gender_F', 'gender_M']]
+# Define the feature matrix and target variable using the original dataset without filtering
+features = ['age', 'income', 'days_as_member', 'gender_F', 'gender_M', 'is_bogo', 'is_discount', 'reward', 'difficulty', 'duration_hrs']
+X = df[features]
 
-# Standardize the features
-scaler = StandardScaler()
-demographic_features_scaled = scaler.fit_transform(demographic_features)
+# Modify the target variable to include only offers that were viewed before being completed
+df['offer_completed_viewed'] = df.apply(lambda x: 1 if x['offer_completed'] == 1 and x['viewed_before_completion'] == 1 else 0, axis=1)
+y = df['offer_completed_viewed']
 
-# Apply K-means clustering
-kmeans = KMeans(n_clusters=3, random_state=42)
-df['segment'] = kmeans.fit_predict(demographic_features_scaled)
+# Check the new distribution of the target variable
+target_distribution_new = y.value_counts()
 
-# Display the first few rows with the segment labels
-df[['age', 'income', 'days_as_member', 'gender_F', 'gender_M', 'segment']].head()
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42, stratify=y)
 
-### Segment Customers ###
-# Extract demographic features for clustering
-demographic_features = df[['age', 'income', 'days_as_member', 'gender_F', 'gender_M']]
+# Train a Random Forest model
+model = RandomForestClassifier(random_state=42, class_weight='balanced')
+model.fit(X_train, y_train)
 
-# Standardize the features
-scaler = StandardScaler()
-demographic_features_scaled = scaler.fit_transform(demographic_features)
+# Define a new customer profile and offers (for demonstration)
+new_customer_profile = pd.DataFrame({
+    'age': [30, 40, 50, 60],
+    'income': [50000, 60000, 70000, 80000],
+    'days_as_member': [200, 400, 600, 800],
+    'gender_F': [0, 1, 0, 1],
+    'gender_M': [1, 0, 1, 0]
+})
 
-# Apply K-means clustering
-kmeans = KMeans(n_clusters=3, random_state=42)
-df['segment'] = kmeans.fit_predict(demographic_features_scaled)
+offers = pd.DataFrame({
+    'is_bogo': [0, 1, 0, 1],
+    'is_discount': [1, 0, 1, 0],
+    'reward': [2, 5, 3, 10],
+    'difficulty': [10, 5, 7, 10],
+    'duration_hrs': [168, 120, 240, 168]
+})
 
-# Display the first few rows with the segment labels
-df[['age', 'income', 'days_as_member', 'gender_F', 'gender_M', 'segment']].head()
+# Create a combined dataset for prediction
+customer_offer_pairs = pd.DataFrame(itertools.product(new_customer_profile.index, offers.index), columns=['customer_idx', 'offer_idx'])
+customer_offer_pairs = customer_offer_pairs.merge(new_customer_profile, left_on='customer_idx', right_index=True)
+customer_offer_pairs = customer_offer_pairs.merge(offers, left_on='offer_idx', right_index=True)
 
-# Calculate mean values of features for each segment
-cluster_characteristics = df.groupby('segment')[['age', 'income', 'days_as_member', 'gender_F', 'gender_M']].mean()
-cluster_characteristics['num_cust'] = df.groupby('segment').size()
-cluster_characteristics['perc_cust'] = (cluster_characteristics['num_cust'] / df.shape[0]) * 100
+# Predict response probability
+X_new = customer_offer_pairs[features]
+customer_offer_pairs['response_probability'] = model.predict_proba(X_new)[:, 1]
 
-# Display the characteristics of each cluster
-cluster_characteristics = round(cluster_characteristics,2)
-cluster_characteristics
+# Calculate top recommendations
+grouped = customer_offer_pairs.groupby('customer_idx')
+sorted_pairs = customer_offer_pairs.sort_values(by=['customer_idx', 'response_probability'], ascending=[True, False])
+top_per_group = sorted_pairs.drop_duplicates(subset=['customer_idx'])
+top_recommendations = top_per_group.reset_index(drop=True)
+top_recommendations
 
-# Reset the index to include 'customer_id' as a column
-df_reset = df.reset_index()
+# Predict on the test set
+y_test_pred = model.predict(X_test)
 
-response_data = df_reset.groupby(['segment', 'is_bogo', 'is_discount', 'reward', 'difficulty', 'duration_hrs']).agg(
-    {
-    'customer_id': 'nunique',
-    'offer_viewed': 'mean',
-    'viewed_before_completion': 'mean',
-    'offer_completed': ['mean', 'sum'],
-    'total_transactions': ['sum', 'median'],
-    'total_transaction_amount': ['sum', 'median']  # Added 'median' aggregation
-    }).reset_index()
+### Model Validation Metrics ###
+# Calculate ROC AUC Score
+roc_auc = roc_auc_score(y_test, model.predict_proba(X_test)[:, 1])
+print(f'The ROC-ACU score is: {roc_auc}')
 
-# Flatten the MultiIndex columns
-response_data.columns = ['_'.join(col).strip('_') for col in response_data.columns.values]
+# Calculate False Positive and False Negative Rates
+tn, fp, fn, tp = confusion_matrix(y_test, y_test_pred).ravel()
+fpr = fp / (fp + tn)
+print(f'The False Positive Rate is: {fpr}')
+fnr = fn / (fn + tp)
+print(f'The False Negative Rate is: {fnr}')
 
-# Rename columns for clarity, including the new customer count and median total transaction amount columns
-response_data.rename(columns={
-    'customer_id_nunique': 'num_customers',
-    'offer_viewed_mean': 'viewed_rate', 
-    'viewed_before_completion_mean': 'viewed_before_completion_rate',
-    'offer_completed_mean': 'completion_rate',
-    'offer_completed_sum': 'offers_completed',
-    'total_transactions_sum': 'total_transactions',
-    'total_transactions_median': 'median_total_transactions',
-    'total_transaction_amount_sum': 'total_transaction_amount',
-    'total_transaction_amount_median': 'median_total_transaction_amount',
-    }, inplace=True)
+# Calculate Cross-Validation Score
+cv_scores = cross_val_score(model, X, y, cv=5, scoring='f1')
+mean_cv_score = cv_scores.mean()
+print(f'The mean cross-validation F1 score is: {mean_cv_score}')
+std_cv_score = cv_scores.std()
+print(f'The standard deviation of the cross-validation F1 scores is: {std_cv_score}')
 
-rates = ['viewed_rate','viewed_before_completion_rate', 'completion_rate','total_transaction_amount']
-response_data[rates] = round(response_data[rates] * 100, 2)
+### Generate Classication Report ###
+class_report = classification_report(y_test, y_test_pred, output_dict=True)
+df_main = pd.DataFrame(class_report).transpose().drop(['accuracy'])
+overall_metrics = pd.DataFrame(class_report).transpose().loc[['accuracy']]
+df_final = pd.concat([df_main, overall_metrics])
+df_final
 
-response_data.to_csv(r'data\04_fct\fct_segmented_offer_responses.csv')
-response_data.to_pickle(r'data\04_fct\fct_segmented_offer_responses.pkl')
-response_data.head()
+metrics_dict = {
+    'ROC-AUC Score': roc_auc,
+    'False Positive Rate': fpr, 
+    'False Negative Rate': fnr,
+    'F1 Macro Avg': df_final.loc['macro avg', 'f1-score'],
+    'F1 Weighted Avg': df_final.loc['weighted avg', 'f1-score'],
+    'Mean Cross-Validation F1 Score': mean_cv_score,
+    'STD Cross-Validation F1 Score': std_cv_score
+}
 
-def calculate_score(row, medians):
-    score = 0
-    # Criteria scoring
-    score += row['num_customers'] > medians['num_customers']
-    score += row['viewed_rate'] > medians['viewed_rate']
-    score += row['viewed_before_completion_rate'] > medians['viewed_before_completion_rate']
-    score += row['completion_rate'] > medians['completion_rate']
-    score += row['median_total_transactions'] < medians['median_total_transactions']
-    score += row['median_total_transaction_amount'] > medians['median_total_transaction_amount']
-    return score
-
-def get_optimal_rows(df, segment, top_n=None):
-    seg_df = df[df['segment'] == segment].copy()
-    medians = seg_df.median()
-    
-    # Apply score calculation for each row
-    seg_df.loc[:, 'score'] = seg_df.apply(lambda row: calculate_score(row, medians), axis=1)
-    
-    # Sort by score in descending order to get rows with the highest scores at the top
-    if top_n is None:
-        optimal_rows = seg_df.sort_values(by='score', ascending=False)
-    else:
-        optimal_rows = seg_df.sort_values(by='score', ascending=False).head(top_n)
-    
-    return optimal_rows
-
-# Concatenate top rows for each segment
-response_scores = pd.concat([get_optimal_rows(response_data, i, top_n=None) for i in range(3)])
-response_scores.to_csv(r'data\04_fct\fct_segmented_offer_response_scores.csv')
-response_scores.to_pickle(r'data\04_fct\fct_segmented_offer_response_scores.pkl')
-response_scores.head()
-
-top_2 = pd.concat([get_optimal_rows(response_data, i, top_n=2) for i in range(3)])
-top_2
+# Convert the dictionary to a DataFrame
+metrics_df = pd.DataFrame(list(metrics_dict.items()), columns=['Metric', 'Value'])
+metrics_df.to_csv(r'data/04_fct/fct_personalized_evaluation_results.csv', index=False)
+metrics_df
