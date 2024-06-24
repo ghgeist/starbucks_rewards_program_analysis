@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/assets/starbucks_logo.png" width="200" height="200">
+  <img src="assets\Starbucks-Logo.png"
 </p>
 
 # Starbucks Capstone Challenge
