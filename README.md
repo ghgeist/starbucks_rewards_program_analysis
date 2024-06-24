@@ -1,4 +1,6 @@
-![Starbucks Logo](/starbucks_logo.png)
+<p align="center">
+  <img src="/assets/starbucks_logo.png" width="200" height="200">
+</p>
 
 # Starbucks Capstone Challenge
 
