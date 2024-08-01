@@ -18,7 +18,6 @@ pip install -r requirements.txt
 - **Python Version:** 3.12
 
 ## Python Packages Used
-## Python Packages Used
 - **General Purpose:** 
   - `numpy`
   - `pandas`
